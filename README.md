@@ -268,28 +268,100 @@ ANTHROPIC_BASE_URL="http://127.0.0.1:8787" ANTHROPIC_API_KEY="sk-local-bridge" o
 
 ---
 
-### 3. 接入 Codex CLI
+### 3. 接入 Codex 客户端 (Codex CLI)
 
-将 [examples/codex.config.toml](examples/codex.config.toml) 内容合并进你的 Codex 配置文件（Windows: `%USERPROFILE%\.codex\config.toml`，Linux/macOS: `~/.codex/config.toml`）：
+OpenAI Codex 客户端（如 Codex CLI）基于最新的 **OpenAI Responses API**（`/v1/responses`）进行交互通信。Agent Bridge 已完整实现 Responses 协议双向转换与事件流适配，让你可以直接使用腾讯 WorkBuddy / CodeBuddy 积分驱动 Codex。
+
+#### 1. 配置文件路径
+
+将配置信息写入 Codex 的全局配置文件 `config.toml`（若文件夹或文件不存在可直接新建）：
+
+- **Windows**：`%USERPROFILE%\.codex\config.toml`（即 `C:\Users\<你的用户名>\.codex\config.toml`）
+- **Linux / macOS**：`~/.codex/config.toml`
+
+#### 2. 配置示例（支持多 Profile 快速切换）
+
+将 [examples/codex.config.toml](examples/codex.config.toml) 中的内容添加至你的 Codex 配置文件中：
 
 ```toml
+# 1. 定义 Agent Bridge 供应商
 [model_providers.workbuddy]
 name = "WorkBuddy via Agent Bridge"
-base_url = "http://127.0.0.1:8787/v1"
-wire_api = "responses"
-env_key = "BRIDGE_API_KEY"
+base_url = "http://127.0.0.1:8787/v1"   # 注意必须包含 /v1 后缀
+wire_api = "responses"                  # 必须指定为 responses 协议
+env_key = "BRIDGE_API_KEY"              # 读取环境变量作为鉴权 Key
 
+# 2. 默认主力 Profile（GLM-5.2，全能开发首选，夜间折扣）
 [profiles.workbuddy]
 model = "glm-5.2"
 model_provider = "workbuddy"
+
+# 3. 旗舰代码重构 Profile（GLM-5.3，智谱旗舰模型）
+[profiles.workbuddy-glm53]
+model = "glm-5.3"
+model_provider = "workbuddy"
+
+# 4. 深度推理 Profile（DeepSeek-V4-Pro，长思维链深度推理）
+[profiles.workbuddy-opus]
+model = "deepseek-v4-pro"
+model_provider = "workbuddy"
+
+# 5. 200K 超长上下文 Profile（Kimi-K3，海量文档与超长代码库分析）
+[profiles.workbuddy-kimi]
+model = "kimi-k3"
+model_provider = "workbuddy"
+
+# 6. 极速轻量 Profile（DeepSeek-V4.1-Flash，超低倍率极速补全）
+[profiles.workbuddy-flash]
+model = "deepseek-v4.1-flash"
+model_provider = "workbuddy"
 ```
 
-运行 Codex：
+#### 3. 设置环境变量 (API Key)
+
+设置与 `config.toml` 中 `api_key` 一致的鉴权 Key（默认 `sk-local-bridge`）：
+
+**Windows (PowerShell)**：
+```powershell
+# 临时会话有效：
+$env:BRIDGE_API_KEY="sk-local-bridge"
+
+# 或持久化到系统当前用户环境变量（只需执行一次）：
+[Environment]::SetEnvironmentVariable("BRIDGE_API_KEY", "sk-local-bridge", "User")
+```
+
+**macOS / Linux (Bash/Zsh)**：
+```bash
+# 临时会话有效：
+export BRIDGE_API_KEY="sk-local-bridge"
+
+# 或持久化写入 shell 配置：
+echo 'export BRIDGE_API_KEY="sk-local-bridge"' >> ~/.zshrc  # 或 ~/.bashrc
+```
+
+#### 4. 常用运行命令示例
 
 ```powershell
-$env:BRIDGE_API_KEY="sk-local-bridge"
-codex --profile workbuddy "请分析当前仓库的代码架构"
+# 1. 使用默认 Profile 执行单次任务
+codex --profile workbuddy "请分析当前仓库的目录结构并提出优化建议"
+
+# 2. 进入交互式对话模式（REPL）
+codex --profile workbuddy
+
+# 3. 指定深度推理模型进行复杂代码重构
+codex --profile workbuddy-opus "设计一个高性能缓存失效机制"
+
+# 4. 指定超长上下文模型分析整库代码
+codex --profile workbuddy-kimi "全面扫描仓库中的潜在安全漏洞"
+
+# 5. 临时通过 -m 参数覆盖模型
+codex --profile workbuddy -m glm-5.3 "请帮我为当前文件编写单元测试"
 ```
+
+> 💡 **配置避坑要点**：
+> 1. `wire_api` 必须精确配置为 `"responses"`（对应 Agent Bridge 的 Responses 协议网关）。
+> 2. `base_url` 必须写为 `http://127.0.0.1:8787/v1`（包含 `/v1`）。
+> 3. `env_key` 环境变量名称必须与终端中声明的变量名一致（如 `BRIDGE_API_KEY`）。
 
 ---
 
