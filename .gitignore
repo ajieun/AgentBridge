@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.log
+.env
+data/
+*.info
+credentials.json
+.agent-bridge/
+dist/
+build/
+*.egg-info/

@@ -1,0 +1,12 @@
+# 合并到 %USERPROFILE%\.codex\config.toml
+# 使用前请先启动：python -m agent_bridge serve
+
+[model_providers.workbuddy]
+name = "WorkBuddy via Agent Bridge"
+base_url = "http://127.0.0.1:8787/v1"
+wire_api = "responses"
+env_key = "BRIDGE_API_KEY"
+
+[profiles.workbuddy]
+model = "glm-5.2"
+model_provider = "workbuddy"

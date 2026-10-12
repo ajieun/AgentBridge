@@ -1,0 +1,30 @@
+# Agent Bridge 本地配置
+host = "127.0.0.1"
+port = 8787
+
+# 本地客户端鉴权。留空则不校验；Codex / Claude Code 可填任意占位值
+api_key = "sk-local-bridge"
+
+# cn = 国内 CodeBuddy / WorkBuddy（copilot.tencent.com）
+# global = 国际 CodeBuddy（www.codebuddy.ai）
+# workbuddy = 国际 WorkBuddy（www.workbuddy.ai）
+network = "cn"
+
+default_model = "glm-5.2"
+desensitize = true
+
+# 可选：手动指定桌面端 auth 目录或桥自己的凭据文件
+# auth_dir = ""
+# credentials_file = "C:/Users/你的用户名/.agent-bridge/credentials.json"
+
+# Codex / Claude Code 客户端常用模型名 → 腾讯后端真实模型
+[aliases]
+"claude" = "glm-5.2"
+"claude-sonnet-4" = "glm-5.2"
+"claude-sonnet-4-5" = "glm-5.3"
+"claude-3-5-sonnet" = "glm-5.2"
+"claude-3-7-sonnet" = "glm-5.2"
+"claude-opus-4" = "deepseek-v4-pro"
+"gpt-5" = "glm-5.2"
+"gpt-5-codex" = "glm-5.2"
+"codex" = "glm-5.2"
