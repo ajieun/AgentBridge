@@ -22,8 +22,11 @@ CLIENT_FINGERPRINTS = (
     re.compile(r"Claude is operating as an agent inside the Claude desktop app\.?", re.IGNORECASE),
     re.compile(r"Anthropic's Claude Agent SDK", re.IGNORECASE),
     re.compile(r"Claude Agent SDK", re.IGNORECASE),
-    re.compile(r"Claude desktop app", re.IGNORECASE),
-    # 4. 其他已知被风控拦截的特征
+    # 4. Codex CLI 官方特征与开场白
+    re.compile(r"You are a coding agent running in the Codex CLI[\s\S]*?led by OpenAI\.?\s*", re.IGNORECASE),
+    re.compile(r"Codex CLI is an open source project led by OpenAI\.?\s*", re.IGNORECASE),
+    re.compile(r"Within this context, Codex refers to the open-source agentic coding interface[^\n]*\n?", re.IGNORECASE),
+    # 5. 其他已知被风控拦截的特征
     re.compile(r"Sisyphus-Junior\s*-\s*Focused executor from OhMyOpenCode", re.IGNORECASE),
 )
 

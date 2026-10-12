@@ -209,6 +209,7 @@ def create_app(settings: Settings, store: CredentialStore | None) -> FastAPI:
         client_stream = payload.get("stream", True)
         chat = responses_to_chat(payload)
         body = prepare_chat_body(chat, get_settings())
+        print(f"[RECV /v1/responses] req_model={payload.get('model')} -> resolved={body.get('model')}, stream={client_stream}, tools={len(payload.get('tools') or [])}", flush=True)
         converter = ResponsesStreamConverter(model=body.get("model", "unknown"))
         cred = get_store()
         if client_stream:

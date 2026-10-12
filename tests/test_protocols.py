@@ -111,6 +111,12 @@ def test_strip_client_fingerprints():
     assert "Claude Code" not in body["messages"][0]["content"]
     assert "Keep code concise." in body["messages"][0]["content"]
 
+    # Codex CLI 开场白剥离
+    codex_prompt = "You are a coding agent running in the Codex CLI, a terminal-based coding assistant. Codex CLI is an open source project led by OpenAI. You are expected to be precise, safe, and helpful.\n\nKeep code clean."
+    cleaned_codex = strip_client_fingerprints(codex_prompt)
+    assert "Codex CLI" not in cleaned_codex
+    assert "Keep code clean." in cleaned_codex
+
 
 
 def test_auth_encrypted_token():

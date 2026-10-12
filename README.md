@@ -270,98 +270,114 @@ ANTHROPIC_BASE_URL="http://127.0.0.1:8787" ANTHROPIC_API_KEY="sk-local-bridge" o
 
 ### 3. 接入 Codex 客户端 (Codex CLI)
 
-OpenAI Codex 客户端（如 Codex CLI）基于最新的 **OpenAI Responses API**（`/v1/responses`）进行交互通信。Agent Bridge 已完整实现 Responses 协议双向转换与事件流适配，让你可以直接使用腾讯 WorkBuddy / CodeBuddy 积分驱动 Codex。
+OpenAI Codex 客户端（如 Codex CLI）基于最新的 **OpenAI Responses API**（`/v1/responses`）进行交互通信。Agent Bridge 已完整实现 Responses 协议双向转换、流式事件适配以及 Codex CLI 客户端指纹清洗，让你可以直接使用腾讯 WorkBuddy / CodeBuddy 积分驱动 Codex。
 
 #### 1. 配置文件路径
 
-将配置信息写入 Codex 的全局配置文件 `config.toml`（若文件夹或文件不存在可直接新建）：
+Codex 的全局配置文件位于用户主目录下（若文件夹或文件不存在可直接新建）：
 
 - **Windows**：`%USERPROFILE%\.codex\config.toml`（即 `C:\Users\<你的用户名>\.codex\config.toml`）
 - **Linux / macOS**：`~/.codex/config.toml`
 
-#### 2. 配置示例（支持多 Profile 快速切换）
+#### 2. 全局配置推荐（直接设为默认，免输 profile）
 
-将 [examples/codex.config.toml](examples/codex.config.toml) 中的内容添加至你的 Codex 配置文件中：
+最便捷的使用方式是将 WorkBuddy 直接设为默认模型提供商。将以下内容写入 `%USERPROFILE%\.codex\config.toml`：
 
 ```toml
-# 1. 定义 Agent Bridge 供应商
+# 直接设为全局默认模型与供应商（每次执行 codex 默认生效）
+model = "glm-5.2"
+model_provider = "workbuddy"
+
+# 定义 Agent Bridge 供应商
 [model_providers.workbuddy]
 name = "WorkBuddy via Agent Bridge"
 base_url = "http://127.0.0.1:8787/v1"   # 注意必须包含 /v1 后缀
 wire_api = "responses"                  # 必须指定为 responses 协议
 env_key = "BRIDGE_API_KEY"              # 读取环境变量作为鉴权 Key
-
-# 2. 默认主力 Profile（GLM-5.2，全能开发首选，夜间折扣）
-[profiles.workbuddy]
-model = "glm-5.2"
-model_provider = "workbuddy"
-
-# 3. 旗舰代码重构 Profile（GLM-5.3，智谱旗舰模型）
-[profiles.workbuddy-glm53]
-model = "glm-5.3"
-model_provider = "workbuddy"
-
-# 4. 深度推理 Profile（DeepSeek-V4-Pro，长思维链深度推理）
-[profiles.workbuddy-opus]
-model = "deepseek-v4-pro"
-model_provider = "workbuddy"
-
-# 5. 200K 超长上下文 Profile（Kimi-K3，海量文档与超长代码库分析）
-[profiles.workbuddy-kimi]
-model = "kimi-k3"
-model_provider = "workbuddy"
-
-# 6. 极速轻量 Profile（DeepSeek-V4.1-Flash，超低倍率极速补全）
-[profiles.workbuddy-flash]
-model = "deepseek-v4.1-flash"
-model_provider = "workbuddy"
 ```
 
-#### 3. 设置环境变量 (API Key)
+配置后，在终端中直接运行 `codex` 即可自动走本地桥！
 
-设置与 `config.toml` 中 `api_key` 一致的鉴权 Key（默认 `sk-local-bridge`）：
+---
+
+#### 3. 进阶：多模型 Profile 切换（Profiles v2 规范）
+
+> ⚠️ **注意**：新版 Codex (v0.162+) 采用了 **Profiles v2** 规范，不再支持在 `config.toml` 内部编写 `[profiles.xxx]` 表，而是要求将每个 profile 保存为独立的配置文件：`%USERPROFILE%\.codex\<profile名称>.config.toml`。
+
+你可以在 `%USERPROFILE%\.codex\` 目录下创建以下独立 profile 文件：
+
+1. **`workbuddy.config.toml`**（主力开发模型）
+   ```toml
+   model = "glm-5.2"
+   model_provider = "workbuddy"
+   ```
+2. **`workbuddy-glm53.config.toml`**（智谱旗舰代码重构）
+   ```toml
+   model = "glm-5.3"
+   model_provider = "workbuddy"
+   ```
+3. **`workbuddy-opus.config.toml`**（DeepSeek-V4-Pro 深度长思维链）
+   ```toml
+   model = "deepseek-v4-pro"
+   model_provider = "workbuddy"
+   ```
+4. **`workbuddy-kimi.config.toml`**（Kimi-K3 200K 超长上下文与整库代码分析）
+   ```toml
+   model = "kimi-k3"
+   model_provider = "workbuddy"
+   ```
+5. **`workbuddy-flash.config.toml`**（DeepSeek-V4.1-Flash 超低倍率极速响应）
+   ```toml
+   model = "deepseek-v4.1-flash"
+   model_provider = "workbuddy"
+   ```
+
+#### 4. 设置环境变量 (API Key)
+
+Codex 通过 `env_key = "BRIDGE_API_KEY"` 读取鉴权密匙，必须配置此环境变量（值与 `config.toml` 中的 `api_key` 一致，默认 `sk-local-bridge`）：
 
 **Windows (PowerShell)**：
 ```powershell
-# 临时会话有效：
+# 临时会话生效：
 $env:BRIDGE_API_KEY="sk-local-bridge"
 
-# 或持久化到系统当前用户环境变量（只需执行一次）：
+# 或持久化到系统当前用户环境变量（推荐，只需执行一次）：
 [Environment]::SetEnvironmentVariable("BRIDGE_API_KEY", "sk-local-bridge", "User")
 ```
 
 **macOS / Linux (Bash/Zsh)**：
 ```bash
-# 临时会话有效：
+# 临时会话生效：
 export BRIDGE_API_KEY="sk-local-bridge"
 
 # 或持久化写入 shell 配置：
 echo 'export BRIDGE_API_KEY="sk-local-bridge"' >> ~/.zshrc  # 或 ~/.bashrc
 ```
 
-#### 4. 常用运行命令示例
+#### 5. 常用运行命令示例
 
 ```powershell
-# 1. 使用默认 Profile 执行单次任务
-codex --profile workbuddy "请分析当前仓库的目录结构并提出优化建议"
+# 1. 默认直接运行（若已配置全局默认）
+codex "请分析当前仓库的目录架构"
 
 # 2. 进入交互式对话模式（REPL）
-codex --profile workbuddy
+codex
 
-# 3. 指定深度推理模型进行复杂代码重构
-codex --profile workbuddy-opus "设计一个高性能缓存失效机制"
+# 3. 指定独立 Profile 执行深度推理
+codex --profile workbuddy-opus "请设计一个高性能高并发缓存方案"
 
-# 4. 指定超长上下文模型分析整库代码
-codex --profile workbuddy-kimi "全面扫描仓库中的潜在安全漏洞"
+# 4. 指定独立 Profile 分析整库代码
+codex --profile workbuddy-kimi "全面扫描仓库中的潜在问题"
 
 # 5. 临时通过 -m 参数覆盖模型
-codex --profile workbuddy -m glm-5.3 "请帮我为当前文件编写单元测试"
+codex -m glm-5.3 "请帮我为当前文件编写单元测试"
 ```
 
 > 💡 **配置避坑要点**：
 > 1. `wire_api` 必须精确配置为 `"responses"`（对应 Agent Bridge 的 Responses 协议网关）。
 > 2. `base_url` 必须写为 `http://127.0.0.1:8787/v1`（包含 `/v1`）。
-> 3. `env_key` 环境变量名称必须与终端中声明的变量名一致（如 `BRIDGE_API_KEY`）。
+> 3. `env_key` 环境变量名称必须与设置的变量名一致（如 `BRIDGE_API_KEY`）。
+> 4. 新版 Codex 报 `Error loading config.toml: --profile ... cannot be used while config.toml contains legacy [profiles....]` 时，说明你在主配置文件中写了旧版 profile 表，请将其迁移为独立的 `<name>.config.toml`。
 
 ---
 

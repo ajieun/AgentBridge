@@ -1,37 +1,39 @@
-# 合并到 Codex 配置文件中：
-# Windows: %USERPROFILE%\.codex\config.toml (即 C:\Users\<用户名>\.codex\config.toml)
-# Linux / macOS: ~/.codex/config.toml
-#
-# 使用前请确保本地代理桥已启动：.\run.ps1 或 python -m agent_bridge serve
+# =============================================================
+# 写入 Codex 全局配置文件：%USERPROFILE%\.codex\config.toml
+# =============================================================
 
-# 1. 定义代理桥供应商
-[model_providers.workbuddy]
-name = "WorkBuddy via Agent Bridge"
-base_url = "http://127.0.0.1:8787/v1"
-wire_api = "responses"
-env_key = "BRIDGE_API_KEY"
-
-# 2. 默认 Profile（推荐 GLM-5.2，高性价比全能开发）
-[profiles.workbuddy]
+# 1. 直接设为默认模型与供应商（推荐：每次启动 codex 默认生效，无需额外参数）
 model = "glm-5.2"
 model_provider = "workbuddy"
 
-# 3. 旗舰代码重构 Profile（GLM-5.3 智谱旗舰代码模型）
-[profiles.workbuddy-glm53]
-model = "glm-5.3"
-model_provider = "workbuddy"
+# 2. 定义 Agent Bridge 供应商接口
+[model_providers.workbuddy]
+name = "WorkBuddy via Agent Bridge"
+base_url = "http://127.0.0.1:8787/v1"   # 必须包含 /v1 后缀
+wire_api = "responses"                  # 必须指定为 responses 协议
+env_key = "BRIDGE_API_KEY"              # 鉴权环境变量名（值填：sk-local-bridge）
 
-# 4. 深度推理 Profile（DeepSeek-V4-Pro 深度长思考）
-[profiles.workbuddy-opus]
-model = "deepseek-v4-pro"
-model_provider = "workbuddy"
-
-# 5. 超长上下文 Profile（Kimi-K3 200K 海量文档分析）
-[profiles.workbuddy-kimi]
-model = "kimi-k3"
-model_provider = "workbuddy"
-
-# 6. 极速轻量 Profile（DeepSeek-V4.1-Flash 超低倍率极速响应）
-[profiles.workbuddy-flash]
-model = "deepseek-v4.1-flash"
-model_provider = "workbuddy"
+# =============================================================
+# 进阶：多模型 Profile 切换（Codex Profiles v2 规范）
+# =============================================================
+# 注意：新版 Codex (v0.162+) 要求将 profile 单独保存为独立的配置文件：
+# 路径：%USERPROFILE%\.codex\<profile名称>.config.toml
+# 
+# 例如新建 %USERPROFILE%\.codex\workbuddy-opus.config.toml：
+#   model = "deepseek-v4-pro"
+#   model_provider = "workbuddy"
+#
+# 例如新建 %USERPROFILE%\.codex\workbuddy-glm53.config.toml：
+#   model = "glm-5.3"
+#   model_provider = "workbuddy"
+#
+# 例如新建 %USERPROFILE%\.codex\workbuddy-kimi.config.toml：
+#   model = "kimi-k3"
+#   model_provider = "workbuddy"
+#
+# 例如新建 %USERPROFILE%\.codex\workbuddy-flash.config.toml：
+#   model = "deepseek-v4-flash"
+#   model_provider = "workbuddy"
+#
+# 运行对应 Profile 命令：
+#   codex --profile workbuddy-opus "请帮我重构这段代码"
