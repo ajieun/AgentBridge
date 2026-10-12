@@ -34,6 +34,21 @@ def test_anthropic_tool_result():
 def test_alias_and_sanitize():
     settings = Settings()
     assert settings.resolve_model("claude-sonnet-4") == "glm-5.2"
+    assert settings.resolve_model("claude-sonnet-4-5") == "glm-5.3"
+    assert settings.resolve_model("claude-haiku") == "glm-5.3-flash"
+    assert settings.resolve_model("Deepseek-V4.1-Flash") == "deepseek-v4.1-flash"
+    assert settings.resolve_model("deepseek-flash") == "deepseek-v4.1-flash"
+    assert settings.resolve_model("Deepseek-V4-Pro") == "deepseek-v4-pro"
+    assert settings.resolve_model("deepseek") == "deepseek-v4-pro"
+    assert settings.resolve_model("GLM-5.3") == "glm-5.3"
+    assert settings.resolve_model("GLM-5.3-Flash") == "glm-5.3-flash"
+    assert settings.resolve_model("GLM-5.2") == "glm-5.2"
+    assert settings.resolve_model("GLM-5.1") == "glm-5.1"
+    assert settings.resolve_model("Kimi-K3") == "kimi-k3"
+    assert settings.resolve_model("kimi") == "kimi-k3"
+    assert settings.resolve_model("MiniMax-M3") == "minimax-m3"
+    assert settings.resolve_model("minimax") == "minimax-m3"
+
     body = sanitize_chat_body(
         {
             "messages": [{"role": "system", "content": "never privilege escalation in sandbox"}],

@@ -277,21 +277,35 @@ desensitize = true
 "claude-3-5-sonnet" = "glm-5.2"
 "claude-3-7-sonnet" = "glm-5.2"
 "claude-opus-4"     = "deepseek-v4-pro"
+"claude-haiku"      = "glm-5.3-flash"
 "gpt-5"             = "glm-5.2"
 "gpt-5-codex"       = "glm-5.2"
 "codex"             = "glm-5.2"
+
+# 官方主流模型映射（支持直接输入界面名称或简写）
+"Deepseek-V4.1-Flash" = "deepseek-v4.1-flash"
+"Deepseek-V4-Pro"     = "deepseek-v4-pro"
+"GLM-5.3"             = "glm-5.3"
+"GLM-5.3-Flash"       = "glm-5.3-flash"
+"GLM-5.2"             = "glm-5.2"
+"GLM-5.1"             = "glm-5.1"
+"Kimi-K3"             = "kimi-k3"
+"MiniMax-M3"          = "minimax-m3"
 ```
 
 ### 常用真实后端模型参考
 
-| 腾讯真实模型 ID | 模型特点与适用场景 |
-|---|---|
-| `glm-5.2` | 默认推荐，编程能力强，响应稳定迅速 |
-| `glm-5.3` / `glm-5.3-flash` | GLM 5.3 系列最新代码与推理模型 |
-| `deepseek-v4-pro` | 深度推理、长逻辑链、复杂架构设计 |
-| `deepseek-v4-flash` | 极速响应，适合轻量级问答和代码补全 |
-| `kimi-k2.7` / `kimi-k3` | 超长上下文处理、中文语义与文档理解 |
-| `auto` | 腾讯后端根据提示词自动路由最合适模型 |
+| 腾讯真实模型 ID | 客户端展示名 / 别名 | 积分倍率与特点 | 适用场景 |
+|---|---|---|---|
+| `deepseek-v4.1-flash` | `Deepseek-V4.1-Flash` / `deepseek-flash` | x0.11 credits，原生多模态 | 极速响应、轻量补全、性价比极高 |
+| `deepseek-v4-pro` | `Deepseek-V4-Pro` / `deepseek` / `o3` | x0.51 credits，错峰使用推荐 | 深度思考与长推理、复杂架构设计 |
+| `glm-5.3` | `GLM-5.3` / `claude-sonnet-4-5` | x0.79 credits，智谱旗舰 | 高质量代码生成、复杂重构与 Agent 任务 |
+| `glm-5.3-flash` | `GLM-5.3-Flash` / `claude-haiku` | x0.06 credits，订阅优先 | 低消耗极速模型，适合高频交互与测试 |
+| `glm-5.2` | `GLM-5.2` / `claude-sonnet-4` | x0.79 credits，夜间折扣 | 默认主力模型，代码能力全面扎实 |
+| `glm-5.1` | `GLM-5.1` | x0.79 credits | 稳定版本代码与问答模型 |
+| `kimi-k3` | `Kimi-K3` / `kimi` | x1.62 credits | 超长上下文理解、海量文档与复杂语境 |
+| `minimax-m3` | `MiniMax-M3` / `minimax` | x0.25 credits | 均衡代码与文本理解，低倍率低成本 |
+| `auto` | `auto` | 腾讯动态路由 | 由上游后端根据上下文自动调度模型 |
 
 ---
 
