@@ -26,8 +26,7 @@
 
 - 将客户端的 **Anthropic Messages 协议**（`/v1/messages`）或 **OpenAI 协议**（`/v1/chat/completions`、`/v1/responses`）实时转换为腾讯后端接口。
 - **免手动配置 Token**：自动读取本机已登录的桌面端身份凭证，并在过期时自动刷新。
-- **内置风控指纹剥离**：彻底解决上游报错 `400 Illegal API invocation from an unapproved channel`，让 Claude 客户端/Agent 模式稳定可用。
-- **模型别名与动态热重载**：支持把 `claude-3-7-sonnet`、`claude-sonnet-4-5` 灵活映射到真实的 `glm-5.3` 或 `deepseek-v4-pro`，配置文件即改即生效。
+- **全模型官方映射与动态热重载**：将 WorkBuddy 8 款主流模型（GLM-5.3/5.2/5.1、DeepSeek-V4/Flash、Kimi-K3、MiniMax-M3）无缝映射到 Claude 官方标准模型（Sonnet 3.7/3.5、Opus 3、Haiku 3.5/3、Claude 2.1 等），突破官方桌面端硬编码模型过滤限制，配置文件改动即时生效。
 
 > **提示**：真正执行推理的是腾讯后端账号对应的模型。本桥负责协议转换、登录态中继与提示词合规，**不会凭空变成官方 Claude / GPT 原版模型**。
 
@@ -70,7 +69,7 @@
 │ 本地 Agent Bridge (http://127.0.0.1:8787)                   │
 │  ├─ 指纹剥离清洗器 (去除 x-anthropic-billing-header/SDK特征) │
 │  ├─ 协议转换与参数规范 (Anthropic / Responses ↔ Chat)      │
-│  ├─ 模型别名路由 (claude-sonnet-4-5 → glm-5.3)              │
+│  ├─ 模型别名路由 (claude-3-7-sonnet → glm-5.3)              │
 │  └─ 本地凭证存储 (读取桌面端 auth 或 ~/.agent-bridge)        │
 └──────────────────────────────┬──────────────────────────────┘
                                │ POST /v2/chat/completions
@@ -164,13 +163,20 @@ INFO:     Uvicorn running on http://127.0.0.1:8787 (Press CTRL+C to quit)
 # 1. 检查桥健康状态
 curl http://127.0.0.1:8787/health
 
-# 2. 查看可用模型列表
+# 2. 查看可用模型列表（优先展示已映射的 Claude 官方模型及腾讯原生模型）
 curl http://127.0.0.1:8787/v1/models -H "Authorization: Bearer sk-local-bridge"
 
-# 3. 查询当前账号积分余额
+# 3. 发送对话测试（测试 Claude 3.7 Sonnet 映射到 GLM-5.3 连通性）
+curl http://127.0.0.1:8787/v1/messages `
+  -H "Content-Type: application/json" `
+  -H "x-api-key: sk-local-bridge" `
+  -H "anthropic-version: 2023-06-01" `
+  -d '{"model":"claude-3-7-sonnet","messages":[{"role":"user","content":"你好"}],"max_tokens":100}'
+
+# 4. 查询当前账号积分余额
 python -m agent_bridge credits
 
-# 4. 每日签到领取积分
+# 5. 每日签到领取积分
 python -m agent_bridge checkin
 ```
 
@@ -206,7 +212,11 @@ claude
 
 ### 2. 接入 Claude Desktop (官方桌面端) & CC Switch
 
-如果你使用 **CC Switch** 管理 Claude Desktop 配置：
+接入 Claude Desktop 桌面端有两种常见方式：
+
+#### 方式 A：通过 CC Switch 管理配置（推荐）
+
+如果你使用 **CC Switch** 管理 Claude 桌面端供应商：
 
 ```json
 {
@@ -218,20 +228,43 @@ claude
 }
 ```
 
-> **关于 Claude Desktop 的模型选择**：  
-> Claude Desktop 桌面端内部采用硬编码的 Anthropic 官方模型白名单，自定义名称无法在原生界面显示。  
-> 为此，Agent Bridge 已将全部 8 款 WorkBuddy 模型**一一映射到官方标准模型上**。在 Claude Desktop 界面中直接选择对应的官方模型即可无缝调用：
->
-> | Claude Desktop 界面选项 | 官方模型 ID | 实际调用的腾讯模型 | 特性与适用场景 |
-> |---|---|---|---|
-> | **Claude 3.7 Sonnet** | `claude-3-7-sonnet-20250219` | `glm-5.3` | 智谱旗舰代码模型，复杂重构与 Agent 任务 |
-> | **Claude 3.5 Sonnet** | `claude-3-5-sonnet-20241022` | `glm-5.2` | 默认主力模型（夜间折扣），全能开发 |
-> | **Claude 3.5 Sonnet (旧版)** | `claude-3-5-sonnet-20240620` | `glm-5.1` | 稳定版本代码与常规问答 |
-> | **Claude 3 Opus** | `claude-3-opus-20240229` | `deepseek-v4-pro` | 深度推理长逻辑链（错峰使用） |
-> | **Claude 3.5 Haiku** | `claude-3-5-haiku-20241022` | `glm-5.3-flash` | 订阅优先高频轻量模型，极速响应 |
-> | **Claude 3 Haiku** | `claude-3-haiku-20240307` | `deepseek-v4.1-flash` | 原生多模态，x0.11 超低积分极速模型 |
-> | **Claude 2.1** | `claude-2.1` | `kimi-k3` | 200K 超长文档与海量上下文理解 |
-> | **Claude 2.0 / Instant** | `claude-2.0` / `claude-instant-1.2` | `minimax-m3` | 均衡多语言与低费率通用模型 |
+#### 方式 B：通过环境变量直接启动官方客户端
+
+无需借助第三方切换工具，只需在启动 Claude Desktop 前注入网关地址与鉴权 Key 即可：
+
+**Windows (PowerShell)**：
+```powershell
+$env:ANTHROPIC_BASE_URL="http://127.0.0.1:8787"
+$env:ANTHROPIC_API_KEY="sk-local-bridge"
+Start-Process "$env:LOCALAPPDATA\Programs\Claude\Claude.exe"
+```
+
+**macOS (终端)**：
+```bash
+ANTHROPIC_BASE_URL="http://127.0.0.1:8787" ANTHROPIC_API_KEY="sk-local-bridge" open -a "Claude"
+```
+
+---
+
+#### 🎯 Claude Desktop 原生模型选择指南
+
+> **核心机制**：  
+> Claude Desktop 原生客户端在前端代码中**硬编码了 Anthropic 官方模型白名单**（如 Sonnet、Opus、Haiku 等），任何非官方格式的自定义模型名均会被原生界面过滤，无法直接出现在下拉菜单中。  
+> 
+> 为彻底解决该问题，Agent Bridge 已在配置层与解析层将腾讯 WorkBuddy **全部 8 款主流模型精准映射至官方标准模型 ID**。你在 Claude Desktop 下拉菜单中选择对应的官方模型，即可无缝驱动相应的腾讯模型：
+
+| Claude Desktop 界面选项 | 官方模型 ID (`config.toml` 别名) | 实际调用的腾讯模型 | 特性与适用场景 |
+|---|---|---|---|
+| **Claude 3.7 Sonnet** | `claude-3-7-sonnet-20250219` / `claude-3-7-sonnet` | `glm-5.3` | 智谱旗舰代码模型，复杂逻辑重构与 Agent 任务 |
+| **Claude 3.5 Sonnet** | `claude-3-5-sonnet-20241022` / `claude-3-5-sonnet` | `glm-5.2` | 默认主力模型（夜间折扣），全能开发首选 |
+| **Claude 3.5 Sonnet (旧版)** | `claude-3-5-sonnet-20240620` | `glm-5.1` | 稳定版本代码生成与常规问答 |
+| **Claude 3 Opus** | `claude-3-opus-20240229` / `claude-3-opus` | `deepseek-v4-pro` | 深度思维链长推理、复杂架构（建议错峰使用） |
+| **Claude 3.5 Haiku** | `claude-3-5-haiku-20241022` / `claude-3-5-haiku` | `glm-5.3-flash` | 订阅优先高频轻量模型，极速响应 |
+| **Claude 3 Haiku** | `claude-3-haiku-20240307` / `claude-3-haiku` | `deepseek-v4.1-flash` | 原生多模态，x0.11 超低积分消耗，极速补全 |
+| **Claude 2.1** | `claude-2.1` | `kimi-k3` | 200K 超长上下文，海量文档与长文本理解 |
+| **Claude 2.0 / Instant** | `claude-2.0` / `claude-instant-1.2` | `minimax-m3` | 均衡多语言与低费率通用模型 |
+
+> 💡 **提示**：如果你想调整映射关系（例如希望在桌面端选 `Claude 3.7 Sonnet` 时调用 `DeepSeek-V4-Pro`），只需编辑 `config.toml` 中 `[aliases]` 对应行，**保存即生效，无需重启代理服务**！
 
 ---
 
@@ -294,51 +327,102 @@ desensitize = true
 # 客户端选择的模型名 → 腾讯后端真实模型的别名映射
 [aliases]
 # 1. 对应 Claude Desktop 官方硬编码模型名（将 8 款 WorkBuddy 模型映射到官方标准 ID）
+# 官方最新旗舰：Claude 3.7 Sonnet / Sonnet 4.5 → GLM-5.3（旗舰代码重构）
 "claude-3-7-sonnet-20250219"    = "glm-5.3"
 "claude-3-7-sonnet"             = "glm-5.3"
+"claude-sonnet-4-5"             = "glm-5.3"
+"claude-sonnet-4"               = "glm-5.3"
+
+# 官方主力模型：Claude 3.5 Sonnet → GLM-5.2（推荐主力，夜间折扣）
 "claude-3-5-sonnet-20241022"    = "glm-5.2"
 "claude-3-5-sonnet"             = "glm-5.2"
+"claude"                        = "glm-5.2"
+
+# 官方次级主力：Claude 3.5 Sonnet (旧版) → GLM-5.1
 "claude-3-5-sonnet-20240620"    = "glm-5.1"
+
+# 官方最强推理：Claude 3 Opus / Opus 4 → DeepSeek-V4-Pro（深度推理）
 "claude-3-opus-20240229"        = "deepseek-v4-pro"
 "claude-3-opus"                 = "deepseek-v4-pro"
+"claude-opus-4"                 = "deepseek-v4-pro"
+
+# 官方极速模型：Claude 3.5 Haiku → GLM-5.3-Flash（订阅优先，极速响应）
 "claude-3-5-haiku-20241022"     = "glm-5.3-flash"
 "claude-3-5-haiku"              = "glm-5.3-flash"
+"claude-haiku"                  = "glm-5.3-flash"
+
+# 官方闪电模型：Claude 3 Haiku → DeepSeek-V4.1-Flash（极低倍率，超轻量）
 "claude-3-haiku-20240307"       = "deepseek-v4.1-flash"
 "claude-3-haiku"                = "deepseek-v4.1-flash"
-"claude-2.1"                    = "kimi-k3"
-"claude-2.0"                    = "minimax-m3"
 
-# 2. 直观展示别名（部分第三方客户端支持直接显示）
+# 官方超长上下文：Claude 2.1 (200K) → Kimi-K3（长文本与深度文档）
+"claude-2.1"                    = "kimi-k3"
+
+# 官方通用多语言：Claude 2.0 / Instant → MiniMax-M3（低消耗综合模型）
+"claude-2.0"                    = "minimax-m3"
+"claude-2"                      = "minimax-m3"
+"claude-instant-1.2"            = "minimax-m3"
+
+# 2. 直观前缀别名（部分第三方客户端支持直接显示）
 "claude-deepseek-v4-pro"     = "deepseek-v4-pro"
 "claude-deepseek-v4.1-flash" = "deepseek-v4.1-flash"
+"claude-deepseek-flash"      = "deepseek-v4.1-flash"
 "claude-glm-5.3"             = "glm-5.3"
+"claude-glm-5.3-flash"       = "glm-5.3-flash"
+"claude-glm-5.2"             = "glm-5.2"
+"claude-glm-5.1"             = "glm-5.1"
 "claude-kimi-k3"             = "kimi-k3"
 "claude-minimax-m3"          = "minimax-m3"
 
-# 3. 官方主流模型直接映射（支持直接输入界面原名或小写）
+# 3. OpenAI / Codex 系列通用映射
+"gpt-5"       = "glm-5.2"
+"gpt-5-codex" = "glm-5.2"
+"gpt-4.1"     = "glm-5.2"
+"codex"       = "glm-5.2"
+"o3"          = "deepseek-v4-pro"
+
+# 4. DeepSeek 系列 (Deepseek-V4.1-Flash / Deepseek-V4-Pro)
 "Deepseek-V4.1-Flash" = "deepseek-v4.1-flash"
+"deepseek-v4.1-flash" = "deepseek-v4.1-flash"
+"deepseek-flash"      = "deepseek-v4.1-flash"
 "Deepseek-V4-Pro"     = "deepseek-v4-pro"
-"GLM-5.3"             = "glm-5.3"
-"GLM-5.3-Flash"       = "glm-5.3-flash"
-"GLM-5.2"             = "glm-5.2"
-"GLM-5.1"             = "glm-5.1"
-"Kimi-K3"             = "kimi-k3"
-"MiniMax-M3"          = "minimax-m3"
+"deepseek-v4-pro"     = "deepseek-v4-pro"
+"deepseek"            = "deepseek-v4-pro"
+
+# 5. 智谱 GLM 系列 (GLM-5.3 / GLM-5.3-Flash / GLM-5.2 / GLM-5.1)
+"GLM-5.3"       = "glm-5.3"
+"glm-5.3"       = "glm-5.3"
+"GLM-5.3-Flash" = "glm-5.3-flash"
+"glm-5.3-flash" = "glm-5.3-flash"
+"GLM-5.2"       = "glm-5.2"
+"glm-5.2"       = "glm-5.2"
+"GLM-5.1"       = "glm-5.1"
+"glm-5.1"       = "glm-5.1"
+
+# 6. 月之暗面 Kimi 系列 (Kimi-K3)
+"Kimi-K3" = "kimi-k3"
+"kimi-k3" = "kimi-k3"
+"kimi"    = "kimi-k3"
+
+# 7. MiniMax 系列 (MiniMax-M3)
+"MiniMax-M3" = "minimax-m3"
+"minimax-m3" = "minimax-m3"
+"minimax"    = "minimax-m3"
 ```
 
 ### 常用真实后端模型参考
 
-| 腾讯真实模型 ID       | 客户端展示名 / 别名                      | 积分倍率与特点              | 适用场景                              |
-| --------------------- | ---------------------------------------- | --------------------------- | ------------------------------------- |
-| `deepseek-v4.1-flash` | `Deepseek-V4.1-Flash` / `deepseek-flash` | x0.11 credits，原生多模态   | 极速响应、轻量补全、性价比极高        |
-| `deepseek-v4-pro`     | `Deepseek-V4-Pro` / `deepseek` / `o3`    | x0.51 credits，错峰使用推荐 | 深度思考与长推理、复杂架构设计        |
-| `glm-5.3`             | `GLM-5.3` / `claude-sonnet-4-5`          | x0.79 credits，智谱旗舰     | 高质量代码生成、复杂重构与 Agent 任务 |
-| `glm-5.3-flash`       | `GLM-5.3-Flash` / `claude-haiku`         | x0.06 credits，订阅优先     | 低消耗极速模型，适合高频交互与测试    |
-| `glm-5.2`             | `GLM-5.2` / `claude-sonnet-4`            | x0.79 credits，夜间折扣     | 默认主力模型，代码能力全面扎实        |
-| `glm-5.1`             | `GLM-5.1`                                | x0.79 credits               | 稳定版本代码与问答模型                |
-| `kimi-k3`             | `Kimi-K3` / `kimi`                       | x1.62 credits               | 超长上下文理解、海量文档与复杂语境    |
-| `minimax-m3`          | `MiniMax-M3` / `minimax`                 | x0.25 credits               | 均衡代码与文本理解，低倍率低成本      |
-| `auto`                | `auto`                                   | 腾讯动态路由                | 由上游后端根据上下文自动调度模型      |
+| 腾讯真实模型 ID | Claude Desktop 对应官方模型 | 直通展示名 / 别名 | 积分倍率与特点 | 适用场景 |
+|---|---|---|---|---|
+| `glm-5.3` | **Claude 3.7 Sonnet** / `claude-sonnet-4-5` | `GLM-5.3` / `claude-glm-5.3` | x0.79 credits，智谱旗舰 | 高质量代码生成、复杂重构与 Agent 任务 |
+| `glm-5.2` | **Claude 3.5 Sonnet** (`20241022`) | `GLM-5.2` / `claude-glm-5.2` | x0.79 credits，夜间折扣 | 默认主力模型，代码能力全面扎实 |
+| `glm-5.1` | **Claude 3.5 Sonnet (旧版)** (`20240620`) | `GLM-5.1` / `claude-glm-5.1` | x0.79 credits | 稳定版本代码与常规问答 |
+| `deepseek-v4-pro` | **Claude 3 Opus** / `claude-opus-4` | `Deepseek-V4-Pro` / `deepseek` / `o3` | x0.51 credits，错峰使用推荐 | 深度思考与长推理、复杂架构设计 |
+| `glm-5.3-flash` | **Claude 3.5 Haiku** / `claude-haiku` | `GLM-5.3-Flash` / `claude-glm-5.3-flash` | x0.06 credits，订阅优先 | 低消耗极速模型，适合高频交互与测试 |
+| `deepseek-v4.1-flash` | **Claude 3 Haiku** (`20240307`) | `Deepseek-V4.1-Flash` / `deepseek-flash` | x0.11 credits，原生多模态 | 极速响应、轻量补全、性价比极高 |
+| `kimi-k3` | **Claude 2.1** (200K) | `Kimi-K3` / `kimi` | x1.62 credits | 超长上下文理解、海量文档与复杂语境 |
+| `minimax-m3` | **Claude 2.0 / Instant** | `MiniMax-M3` / `minimax` | x0.25 credits | 均衡代码与文本理解，低倍率低成本 |
+| `auto` | 腾讯后端自动路由 | `auto` | 腾讯动态路由 | 由上游后端根据上下文自动调度模型 |
 
 ---
 
@@ -362,6 +446,32 @@ desensitize = true
 ### Q4: Claude Code / Claude Desktop 启动时报 404？
 
 - **解决**：Claude 客户端启动时会探测 `HEAD /api/hello` 与 `POST /v1/messages/count_tokens`。本项目已完整实现上述端点，请确保服务已正常启动并监听 `8787` 端口。
+
+### Q5: Claude Desktop 桌面端下拉列表找不到自定义模型名称？
+
+- **原因**：Claude Desktop 原生桌面端客户端内部硬编码了 Anthropic 官方模型名称白名单过滤逻辑，非官方格式的模型名称无法在原生下拉菜单中渲染。
+- **解决**：无需手动修改客户端。Agent Bridge 已经自动将全部 8 款 WorkBuddy 模型无缝映射到了官方的标准选项（例如选择 `Claude 3.7 Sonnet` 即调用 `GLM-5.3`，选择 `Claude 3 Opus` 即调用 `DeepSeek-V4-Pro`，选择 `Claude 2.1` 即调用 `Kimi-K3` 等）。直接在官方桌面端下拉菜单中选择对应的官方模型即可！
+
+### Q6: 我想更改 Claude Desktop 界面选项与腾讯模型的映射关系？
+
+- **解决**：打开根目录下的 `config.toml`，找到 `[aliases]` 区域，按需修改等号右侧的目标模型 ID 即可。例如将 `"claude-3-7-sonnet" = "glm-5.3"` 改为 `"claude-3-7-sonnet" = "deepseek-v4-pro"`。修改后**无需重启服务**，Agent Bridge 内置热重载机制，保存后下一次请求立即生效！
+
+### Q7: Windows 执行 `.\run.ps1` 报错 `因为在此系统上禁止运行脚本`？
+
+- **原因**：Windows PowerShell 默认的执行策略（Execution Policy）限制了非签名脚本运行。
+- **解决**：以管理员身份或当前用户在 PowerShell 中运行以下命令放行：
+  ```powershell
+  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force
+  ```
+  或者通过命令行临时绕过策略启动：
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File .\run.ps1
+  ```
+
+### Q8: 上游报错 `400 model [...] service info not found`？
+
+- **原因**：腾讯云后端接口对模型 ID 区分大小写，且要求全部为小写（如 `glm-5.3`、`deepseek-v4-pro`），若上游收到首字母大写的 `GLM-5.3` 会报找不到服务。
+- **解决**：Agent Bridge 已在配置解析层与网关层内置大小写自动归一化处理。如果自行在 `config.toml` 中配置映射，请确保等号右侧的值为小写标准 ID。
 
 ---
 
