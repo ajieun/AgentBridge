@@ -218,8 +218,20 @@ claude
 }
 ```
 
-> **关于桌面端的模型选择**：  
-> 官方桌面端界面上的模型下拉菜单通常是固定的（例如 `Claude 3.7 Sonnet`、`Claude 3.5 Sonnet` 等）。你**直接在界面上选择 Sonnet 即可**，无需在客户端寻找改名入口。代理桥在收到请求时，会自动通过 `config.toml` 的别名映射为指定的腾讯模型。
+> **关于 Claude Desktop 的模型选择**：  
+> Claude Desktop 桌面端内部采用硬编码的 Anthropic 官方模型白名单，自定义名称无法在原生界面显示。  
+> 为此，Agent Bridge 已将全部 8 款 WorkBuddy 模型**一一映射到官方标准模型上**。在 Claude Desktop 界面中直接选择对应的官方模型即可无缝调用：
+>
+> | Claude Desktop 界面选项 | 官方模型 ID | 实际调用的腾讯模型 | 特性与适用场景 |
+> |---|---|---|---|
+> | **Claude 3.7 Sonnet** | `claude-3-7-sonnet-20250219` | `glm-5.3` | 智谱旗舰代码模型，复杂重构与 Agent 任务 |
+> | **Claude 3.5 Sonnet** | `claude-3-5-sonnet-20241022` | `glm-5.2` | 默认主力模型（夜间折扣），全能开发 |
+> | **Claude 3.5 Sonnet (旧版)** | `claude-3-5-sonnet-20240620` | `glm-5.1` | 稳定版本代码与常规问答 |
+> | **Claude 3 Opus** | `claude-3-opus-20240229` | `deepseek-v4-pro` | 深度推理长逻辑链（错峰使用） |
+> | **Claude 3.5 Haiku** | `claude-3-5-haiku-20241022` | `glm-5.3-flash` | 订阅优先高频轻量模型，极速响应 |
+> | **Claude 3 Haiku** | `claude-3-haiku-20240307` | `deepseek-v4.1-flash` | 原生多模态，x0.11 超低积分极速模型 |
+> | **Claude 2.1** | `claude-2.1` | `kimi-k3` | 200K 超长文档与海量上下文理解 |
+> | **Claude 2.0 / Instant** | `claude-2.0` / `claude-instant-1.2` | `minimax-m3` | 均衡多语言与低费率通用模型 |
 
 ---
 
@@ -281,18 +293,29 @@ desensitize = true
 
 # 客户端选择的模型名 → 腾讯后端真实模型的别名映射
 [aliases]
-"claude"            = "glm-5.2"
-"claude-sonnet-4"   = "glm-5.2"
-"claude-sonnet-4-5" = "glm-5.3"
-"claude-3-5-sonnet" = "glm-5.2"
-"claude-3-7-sonnet" = "glm-5.2"
-"claude-opus-4"     = "deepseek-v4-pro"
-"claude-haiku"      = "glm-5.3-flash"
-"gpt-5"             = "glm-5.2"
-"gpt-5-codex"       = "glm-5.2"
-"codex"             = "glm-5.2"
+# 1. 对应 Claude Desktop 官方硬编码模型名（将 8 款 WorkBuddy 模型映射到官方标准 ID）
+"claude-3-7-sonnet-20250219"    = "glm-5.3"
+"claude-3-7-sonnet"             = "glm-5.3"
+"claude-3-5-sonnet-20241022"    = "glm-5.2"
+"claude-3-5-sonnet"             = "glm-5.2"
+"claude-3-5-sonnet-20240620"    = "glm-5.1"
+"claude-3-opus-20240229"        = "deepseek-v4-pro"
+"claude-3-opus"                 = "deepseek-v4-pro"
+"claude-3-5-haiku-20241022"     = "glm-5.3-flash"
+"claude-3-5-haiku"              = "glm-5.3-flash"
+"claude-3-haiku-20240307"       = "deepseek-v4.1-flash"
+"claude-3-haiku"                = "deepseek-v4.1-flash"
+"claude-2.1"                    = "kimi-k3"
+"claude-2.0"                    = "minimax-m3"
 
-# 官方主流模型映射（支持直接输入界面名称或简写）
+# 2. 直观展示别名（部分第三方客户端支持直接显示）
+"claude-deepseek-v4-pro"     = "deepseek-v4-pro"
+"claude-deepseek-v4.1-flash" = "deepseek-v4.1-flash"
+"claude-glm-5.3"             = "glm-5.3"
+"claude-kimi-k3"             = "kimi-k3"
+"claude-minimax-m3"          = "minimax-m3"
+
+# 3. 官方主流模型直接映射（支持直接输入界面原名或小写）
 "Deepseek-V4.1-Flash" = "deepseek-v4.1-flash"
 "Deepseek-V4-Pro"     = "deepseek-v4-pro"
 "GLM-5.3"             = "glm-5.3"

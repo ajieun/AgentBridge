@@ -17,23 +17,64 @@ desensitize = true
 # auth_dir = ""
 # credentials_file = "C:/Users/你的用户名/.agent-bridge/credentials.json"
 
-# Codex / Claude Code 客户端常用模型名 → 腾讯后端真实模型
+# Codex / Claude Code / Claude Desktop 客户端常用模型名 → 腾讯后端真实模型
 [aliases]
-# 1. Codex / Claude 客户端通用映射
-"claude" = "glm-5.2"
-"claude-sonnet-4" = "glm-5.2"
-"claude-sonnet-4-5" = "glm-5.3"
-"claude-3-5-sonnet" = "glm-5.2"
-"claude-3-7-sonnet" = "glm-5.2"
-"claude-opus-4" = "deepseek-v4-pro"
-"claude-haiku" = "glm-5.3-flash"
-"gpt-5" = "glm-5.2"
-"gpt-5-codex" = "glm-5.2"
-"gpt-4.1" = "glm-5.2"
-"codex" = "glm-5.2"
-"o3" = "deepseek-v4-pro"
+# 1. 对应 Claude Desktop 官方硬编码模型名（将 8 款 WorkBuddy 模型映射到官方标准 ID）
+# 官方最新旗舰：Claude 3.7 Sonnet / Sonnet 4.5 → GLM-5.3（旗舰代码重构）
+"claude-3-7-sonnet-20250219"    = "glm-5.3"
+"claude-3-7-sonnet"             = "glm-5.3"
+"claude-sonnet-4-5"             = "glm-5.3"
+"claude-sonnet-4"               = "glm-5.3"
 
-# 2. DeepSeek 系列 (Deepseek-V4.1-Flash / Deepseek-V4-Pro)
+# 官方主力模型：Claude 3.5 Sonnet → GLM-5.2（推荐主力，夜间折扣）
+"claude-3-5-sonnet-20241022"    = "glm-5.2"
+"claude-3-5-sonnet"             = "glm-5.2"
+"claude"                        = "glm-5.2"
+
+# 官方次级主力：Claude 3.5 Sonnet (旧版) → GLM-5.1
+"claude-3-5-sonnet-20240620"    = "glm-5.1"
+
+# 官方最强推理：Claude 3 Opus / Opus 4 → DeepSeek-V4-Pro（深度推理）
+"claude-3-opus-20240229"        = "deepseek-v4-pro"
+"claude-3-opus"                 = "deepseek-v4-pro"
+"claude-opus-4"                 = "deepseek-v4-pro"
+
+# 官方极速模型：Claude 3.5 Haiku → GLM-5.3-Flash（订阅优先，极速响应）
+"claude-3-5-haiku-20241022"     = "glm-5.3-flash"
+"claude-3-5-haiku"              = "glm-5.3-flash"
+"claude-haiku"                  = "glm-5.3-flash"
+
+# 官方闪电模型：Claude 3 Haiku → DeepSeek-V4.1-Flash（极低倍率，超轻量）
+"claude-3-haiku-20240307"       = "deepseek-v4.1-flash"
+"claude-3-haiku"                = "deepseek-v4.1-flash"
+
+# 官方超长上下文：Claude 2.1 (200K) → Kimi-K3（长文本与深度文档）
+"claude-2.1"                    = "kimi-k3"
+
+# 官方通用多语言：Claude 2.0 / Instant → MiniMax-M3（低消耗综合模型）
+"claude-2.0"                    = "minimax-m3"
+"claude-2"                      = "minimax-m3"
+"claude-instant-1.2"            = "minimax-m3"
+
+# 2. 直观前缀别名（部分第三方客户端支持直接显示）
+"claude-deepseek-v4-pro"     = "deepseek-v4-pro"
+"claude-deepseek-v4.1-flash" = "deepseek-v4.1-flash"
+"claude-deepseek-flash"      = "deepseek-v4.1-flash"
+"claude-glm-5.3"             = "glm-5.3"
+"claude-glm-5.3-flash"       = "glm-5.3-flash"
+"claude-glm-5.2"             = "glm-5.2"
+"claude-glm-5.1"             = "glm-5.1"
+"claude-kimi-k3"             = "kimi-k3"
+"claude-minimax-m3"          = "minimax-m3"
+
+# 3. OpenAI / Codex 系列通用映射
+"gpt-5"       = "glm-5.2"
+"gpt-5-codex" = "glm-5.2"
+"gpt-4.1"     = "glm-5.2"
+"codex"       = "glm-5.2"
+"o3"          = "deepseek-v4-pro"
+
+# 4. DeepSeek 系列 (Deepseek-V4.1-Flash / Deepseek-V4-Pro)
 "Deepseek-V4.1-Flash" = "deepseek-v4.1-flash"
 "deepseek-v4.1-flash" = "deepseek-v4.1-flash"
 "deepseek-flash" = "deepseek-v4.1-flash"
@@ -41,7 +82,7 @@ desensitize = true
 "deepseek-v4-pro" = "deepseek-v4-pro"
 "deepseek" = "deepseek-v4-pro"
 
-# 3. 智谱 GLM 系列 (GLM-5.3 / GLM-5.3-Flash / GLM-5.2 / GLM-5.1)
+# 5. 智谱 GLM 系列 (GLM-5.3 / GLM-5.3-Flash / GLM-5.2 / GLM-5.1)
 "GLM-5.3" = "glm-5.3"
 "glm-5.3" = "glm-5.3"
 "GLM-5.3-Flash" = "glm-5.3-flash"
@@ -51,12 +92,12 @@ desensitize = true
 "GLM-5.1" = "glm-5.1"
 "glm-5.1" = "glm-5.1"
 
-# 4. 月之暗面 Kimi 系列 (Kimi-K3)
+# 6. 月之暗面 Kimi 系列 (Kimi-K3)
 "Kimi-K3" = "kimi-k3"
 "kimi-k3" = "kimi-k3"
 "kimi" = "kimi-k3"
 
-# 5. MiniMax 系列 (MiniMax-M3)
+# 7. MiniMax 系列 (MiniMax-M3)
 "MiniMax-M3" = "minimax-m3"
 "minimax-m3" = "minimax-m3"
 "minimax" = "minimax-m3"

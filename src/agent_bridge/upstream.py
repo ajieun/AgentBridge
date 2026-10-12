@@ -187,7 +187,9 @@ async def fetch_models(settings: Settings, store: CredentialStore | None) -> lis
             pass
     seen: set[str] = set()
     out: list[str] = []
-    for name in ids + FALLBACK_MODELS + list(settings.aliases.keys()):
+    # 优先输出以 claude 开头的别名模型，供 Claude Desktop / Claude Code 客户端优先识别与展示
+    claude_models = [k for k in settings.aliases.keys() if k.lower().startswith("claude")]
+    for name in claude_models + ids + FALLBACK_MODELS + list(settings.aliases.keys()):
         if name and name not in seen:
             seen.add(name)
             out.append(name)

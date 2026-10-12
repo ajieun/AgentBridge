@@ -131,11 +131,13 @@ def create_app(settings: Settings, store: CredentialStore | None) -> FastAPI:
         return info
 
     @app.get("/v1/models")
+    @app.get("/models")
     async def models(
         authorization: Optional[str] = Header(default=None),
         x_api_key: Optional[str] = Header(default=None, alias="X-Api-Key"),
+        anthropic_api_key: Optional[str] = Header(default=None, alias="anthropic-api-key"),
     ):
-        require_key(authorization, x_api_key)
+        require_key(authorization, x_api_key, anthropic_api_key)
         current_settings = get_settings()
         current_store = STATE.get("store")
         if current_store is None and current_settings:
@@ -146,7 +148,12 @@ def create_app(settings: Settings, store: CredentialStore | None) -> FastAPI:
         return {
             "object": "list",
             "data": [
-                {"id": mid, "object": "model", "created": 1700000000, "owned_by": "workbuddy"}
+                {
+                    "id": mid,
+                    "object": "model",
+                    "created": 1700000000,
+                    "owned_by": "anthropic" if mid.startswith("claude") else "workbuddy",
+                }
                 for mid in ids
             ],
         }
