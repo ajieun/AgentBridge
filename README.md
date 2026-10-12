@@ -5,7 +5,7 @@
 [![Python Version](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/Framework-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![AI Generated](https://img.shields.io/badge/Generated%20by-AI%20(Antigravity)-purple.svg)](#-项目声明)
+[![AI Generated](<https://img.shields.io/badge/Generated%20by-AI%20(Antigravity)-purple.svg>)](#-项目声明)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/)
 
 ---
@@ -23,6 +23,7 @@
 你开通了腾讯 **WorkBuddy** 或 **CodeBuddy** 的会员/套餐积分，拥有大量的免费或高配模型额度（GLM-5.2/5.3、DeepSeek-V4、Kimi、混元等），但在日常编码中，你更习惯使用 **Codex CLI**、**Claude Code**、**Claude Desktop 桌面端**，或者 **Cherry Studio / Chatbox** 等外部工具。
 
 **Agent Bridge** 就是为此而生的本机轻量代理网关：
+
 - 将客户端的 **Anthropic Messages 协议**（`/v1/messages`）或 **OpenAI 协议**（`/v1/chat/completions`、`/v1/responses`）实时转换为腾讯后端接口。
 - **免手动配置 Token**：自动读取本机已登录的桌面端身份凭证，并在过期时自动刷新。
 - **内置风控指纹剥离**：彻底解决上游报错 `400 Illegal API invocation from an unapproved channel`，让 Claude 客户端/Agent 模式稳定可用。
@@ -86,6 +87,7 @@
 ## 🚀 快速上手
 
 ### 环境准备
+
 - **操作系统**：Windows / macOS / Linux
 - **Python**：Python 3.10+
 - **前置依赖**：本机已登录 **WorkBuddy 或 CodeBuddy 桌面端**（推荐），或通过命令行浏览器授权。
@@ -98,7 +100,7 @@
 
 ```powershell
 # 1. 克隆或下载本项目
-git clone https://github.com/your-username/agent-bridge.git
+git clone https://github.com/ajieun/agent-bridge.git
 cd agent-bridge
 
 # 2. 运行一键脚本
@@ -111,7 +113,7 @@ cd agent-bridge
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/your-username/agent-bridge.git
+git clone https://github.com/ajieun/agent-bridge.git
 cd agent-bridge
 
 # 2. 创建并激活虚拟环境
@@ -131,15 +133,19 @@ python -m agent_bridge serve
 ```
 
 > **注意**：如果本机没有安装桌面端，或者未登录，先运行以下命令在浏览器中扫码/授权登录：
+>
 > ```bash
 > python -m agent_bridge login
 > ```
+>
 > 国际版 CodeBuddy 请加上 `--network global`：
+>
 > ```bash
 > python -m agent_bridge --network global login
 > ```
 
 终端看到如下输出即表示启动成功：
+
 ```text
 INFO:     Uvicorn running on http://127.0.0.1:8787 (Press CTRL+C to quit)
 ==== Agent Bridge 运行中 ====
@@ -177,6 +183,7 @@ python -m agent_bridge checkin
 在启动 Claude Code 的终端中设置环境变量：
 
 **Windows (PowerShell)**：
+
 ```powershell
 $env:ANTHROPIC_BASE_URL="http://127.0.0.1:8787"
 $env:ANTHROPIC_API_KEY="sk-local-bridge"
@@ -185,6 +192,7 @@ claude
 ```
 
 **macOS / Linux (Bash/Zsh)**：
+
 ```bash
 export ANTHROPIC_BASE_URL="http://127.0.0.1:8787"
 export ANTHROPIC_API_KEY="sk-local-bridge"
@@ -232,6 +240,7 @@ model_provider = "workbuddy"
 ```
 
 运行 Codex：
+
 ```powershell
 $env:BRIDGE_API_KEY="sk-local-bridge"
 codex --profile workbuddy "请分析当前仓库的代码架构"
@@ -242,6 +251,7 @@ codex --profile workbuddy "请分析当前仓库的代码架构"
 ### 4. 接入普通 OpenAI 客户端（Cherry Studio / Chatbox / NextChat / Cursor 等）
 
 在任何支持自定义 OpenAI 兼容接口的软件中填入：
+
 - **API Base URL**：`http://127.0.0.1:8787/v1`
 - **API Key**：`sk-local-bridge`（需与 `config.toml` 一致，本地防误触鉴权）
 - **模型名称**：直接填入腾讯真实模型名，如 `glm-5.2`、`glm-5.3`、`deepseek-v4-pro` 或 `auto`
@@ -295,35 +305,39 @@ desensitize = true
 
 ### 常用真实后端模型参考
 
-| 腾讯真实模型 ID | 客户端展示名 / 别名 | 积分倍率与特点 | 适用场景 |
-|---|---|---|---|
-| `deepseek-v4.1-flash` | `Deepseek-V4.1-Flash` / `deepseek-flash` | x0.11 credits，原生多模态 | 极速响应、轻量补全、性价比极高 |
-| `deepseek-v4-pro` | `Deepseek-V4-Pro` / `deepseek` / `o3` | x0.51 credits，错峰使用推荐 | 深度思考与长推理、复杂架构设计 |
-| `glm-5.3` | `GLM-5.3` / `claude-sonnet-4-5` | x0.79 credits，智谱旗舰 | 高质量代码生成、复杂重构与 Agent 任务 |
-| `glm-5.3-flash` | `GLM-5.3-Flash` / `claude-haiku` | x0.06 credits，订阅优先 | 低消耗极速模型，适合高频交互与测试 |
-| `glm-5.2` | `GLM-5.2` / `claude-sonnet-4` | x0.79 credits，夜间折扣 | 默认主力模型，代码能力全面扎实 |
-| `glm-5.1` | `GLM-5.1` | x0.79 credits | 稳定版本代码与问答模型 |
-| `kimi-k3` | `Kimi-K3` / `kimi` | x1.62 credits | 超长上下文理解、海量文档与复杂语境 |
-| `minimax-m3` | `MiniMax-M3` / `minimax` | x0.25 credits | 均衡代码与文本理解，低倍率低成本 |
-| `auto` | `auto` | 腾讯动态路由 | 由上游后端根据上下文自动调度模型 |
+| 腾讯真实模型 ID       | 客户端展示名 / 别名                      | 积分倍率与特点              | 适用场景                              |
+| --------------------- | ---------------------------------------- | --------------------------- | ------------------------------------- |
+| `deepseek-v4.1-flash` | `Deepseek-V4.1-Flash` / `deepseek-flash` | x0.11 credits，原生多模态   | 极速响应、轻量补全、性价比极高        |
+| `deepseek-v4-pro`     | `Deepseek-V4-Pro` / `deepseek` / `o3`    | x0.51 credits，错峰使用推荐 | 深度思考与长推理、复杂架构设计        |
+| `glm-5.3`             | `GLM-5.3` / `claude-sonnet-4-5`          | x0.79 credits，智谱旗舰     | 高质量代码生成、复杂重构与 Agent 任务 |
+| `glm-5.3-flash`       | `GLM-5.3-Flash` / `claude-haiku`         | x0.06 credits，订阅优先     | 低消耗极速模型，适合高频交互与测试    |
+| `glm-5.2`             | `GLM-5.2` / `claude-sonnet-4`            | x0.79 credits，夜间折扣     | 默认主力模型，代码能力全面扎实        |
+| `glm-5.1`             | `GLM-5.1`                                | x0.79 credits               | 稳定版本代码与问答模型                |
+| `kimi-k3`             | `Kimi-K3` / `kimi`                       | x1.62 credits               | 超长上下文理解、海量文档与复杂语境    |
+| `minimax-m3`          | `MiniMax-M3` / `minimax`                 | x0.25 credits               | 均衡代码与文本理解，低倍率低成本      |
+| `auto`                | `auto`                                   | 腾讯动态路由                | 由上游后端根据上下文自动调度模型      |
 
 ---
 
 ## ❓ 常见问题排查 (FAQ)
 
 ### Q1: 客户端报错 `API Error: 400 Illegal API invocation from an unapproved channel`？
+
 - **原因**：腾讯上游网关对未经许可的客户端做通道风控，当检测到带有官方特征（如 `x-anthropic-billing-header`、`Claude Agent SDK`、`You are Claude Code...`）时会拦截。
 - **解决**：请确认使用最新版本的 Agent Bridge。本项目已内置专门的 `strip_client_fingerprints` 引擎，会自动在转发前剥离上述特征并保留用户原始意图。
 
 ### Q2: 终端运行 `python` 报错 `无法将“python”项识别为 cmdlet、函数...`？
+
 - **原因**：Windows 系统的全局环境变量 `PATH` 中没有注册 Python。
 - **解决**：如果你在项目目录内，直接执行 `.\run.ps1` 即可（脚本会自动调用 `.venv` 虚拟环境内的 Python），或者在 PowerShell 中运行 `.\.venv\Scripts\Activate.ps1` 激活虚拟环境。
 
 ### Q3: 报错 `401 Unauthorized` / `invalid api key`？
+
 - **本地 401**：客户端配置的 API Key 与 `config.toml` 中的 `api_key` 不匹配。
 - **上游 401**：说明腾讯登录凭证已失效。请打开 WorkBuddy / CodeBuddy 桌面端重新登录，或者执行 `python -m agent_bridge login` 重新授权。
 
 ### Q4: Claude Code / Claude Desktop 启动时报 404？
+
 - **解决**：Claude 客户端启动时会探测 `HEAD /api/hello` 与 `POST /v1/messages/count_tokens`。本项目已完整实现上述端点，请确保服务已正常启动并监听 `8787` 端口。
 
 ---
