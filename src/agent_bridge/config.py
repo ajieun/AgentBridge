@@ -87,9 +87,15 @@ DEFAULT_ALIASES = {
     "claude-minimax-m3": "minimax-m3",
 
     # 3. OpenAI / Codex 系列通用别名
+    "gpt-5.5": "glm-5.2",
     "gpt-5": "glm-5.2",
     "gpt-5-codex": "glm-5.2",
     "gpt-4.1": "glm-5.2",
+    "gpt-4o": "glm-5.2",
+    "gpt-5.6-terra": "glm-5.3",
+    "gpt-5.6-luna": "glm-5.3-flash",
+    "gpt-6-luna": "glm-5.3",
+    "gpt-reserve": "glm-5.2",
     "o3": "deepseek-v4-pro",
     "codex": "glm-5.2",
 

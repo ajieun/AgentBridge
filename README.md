@@ -268,21 +268,73 @@ ANTHROPIC_BASE_URL="http://127.0.0.1:8787" ANTHROPIC_API_KEY="sk-local-bridge" o
 
 ---
 
-### 3. 接入 Codex 客户端 (Codex CLI)
+### 3. 接入 Codex / ChatGPT 桌面客户端与 Codex CLI
 
-OpenAI Codex 客户端（如 Codex CLI）基于最新的 **OpenAI Responses API**（`/v1/responses`）进行交互通信。Agent Bridge 已完整实现 Responses 协议双向转换、流式事件适配以及 Codex CLI 客户端指纹清洗，让你可以直接使用腾讯 WorkBuddy / CodeBuddy 积分驱动 Codex。
+OpenAI Codex 客户端（包含 **Codex Desktop 桌面客户端 / ChatGPT Windows 客户端** 以及 **Codex CLI 命令行**）基于 OpenAI 最新 **Responses API**（`/v1/responses`）协议进行通信。Agent Bridge 已经完整实现 Responses 协议双向转换、流式事件适配、官方模型映射、探活路由（HEAD 探测）以及指纹清洗。
 
-#### 1. 配置文件路径
+---
 
-Codex 的全局配置文件位于用户主目录下（若文件夹或文件不存在可直接新建）：
+#### 方案 A：Codex Desktop 桌面客户端（ChatGPT.exe 图形界面）
 
-- **Windows**：`%USERPROFILE%\.codex\config.toml`（即 `C:\Users\<你的用户名>\.codex\config.toml`）
+如果你使用的是 **ChatGPT / Codex Windows 桌面客户端**（`ChatGPT.exe` / Microsoft Store 应用），请按以下步骤配置：
+
+##### 1. 为什么会出现 401 报错且没有模型列表？
+> ⚠️ **常见报错**：
+> `unexpected status 401 Unauthorized: Incorrect API key provided: sk-local***idge. You can find your API key at https://platform.openai.com/account/api-keys., url: https://api.openai.com/v1/responses`
+> 
+> **原因分析**：
+> 1. 桌面客户端读取了 `auth.json` 中的 `OPENAI_API_KEY: "sk-local-bridge"` 本地 Key。
+> 2. 但由于 `config.toml` 缺少全局顶层的 `openai_base_url`（或者把 `model_provider` 误写在 `[projects]` 内部被系统忽略），桌面客户端**默认将请求发往了 OpenAI 官方服务器**（`api.openai.com`）。
+> 3. 官方服务器校验本地虚拟 Key 失败返回 401，导致客户端无法鉴权，下拉菜单无法加载模型列表。
+
+##### 2. 检查并配置 `auth.json`
+确保 `%USERPROFILE%\.codex\auth.json`（即 `C:\Users\<用户名>\.codex\auth.json`）内容如下：
+```json
+{
+  "auth_mode": "apikey",
+  "OPENAI_API_KEY": "sk-local-bridge"
+}
+```
+
+##### 3. 配置 `config.toml`（必须写在最顶层！）
+打开 `%USERPROFILE%\.codex\config.toml`，将以下内容粘贴在**文件的最顶层（任何 `[...]` 表格节之前）**：
+```toml
+# ==========================================
+# Agent Bridge 本地转发配置（Codex Desktop 桌面客户端生效）
+# ==========================================
+openai_base_url = "http://127.0.0.1:8787/v1"
+model = "gpt-5.5"
+model_reasoning_effort = "low"
+```
+> 💡 **重要提醒**：千万不要将 `openai_base_url` 或 `model` 写在 `[projects.'...']` 下方，否则会被 TOML 解析器当做项目内部属性而直接被 Codex 忽略！
+
+##### 4. 设置 Windows 用户环境变量（推荐，全局生效）
+在 PowerShell 中运行以下命令，将环境变量持久化写入当前用户配置（只需执行一次）：
+```powershell
+[Environment]::SetEnvironmentVariable("OPENAI_BASE_URL", "http://127.0.0.1:8787/v1", "User")
+[Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "sk-local-bridge", "User")
+[Environment]::SetEnvironmentVariable("BRIDGE_API_KEY", "sk-local-bridge", "User")
+```
+
+##### 5. 彻底重启桌面客户端
+Windows 桌面版 ChatGPT 会在后台常驻进程。修改配置后，请在 PowerShell 中执行以下命令彻底关闭后台残留进程，然后重新打开客户端即可：
+```powershell
+Stop-Process -Name ChatGPT, codex -Force -ErrorAction SilentlyContinue
+```
+重新打开客户端后，即可看到模型列表正常加载，且所有对话自动通过本地 Agent Bridge 驱动！
+
+---
+
+#### 方案 B：Codex CLI (终端命令行客户端)
+
+如果你在终端中使用 `codex` 命令行工具：
+
+##### 1. 配置文件路径
+- **Windows**：`%USERPROFILE%\.codex\config.toml`
 - **Linux / macOS**：`~/.codex/config.toml`
 
-#### 2. 全局配置推荐（直接设为默认，免输 profile）
-
-最便捷的使用方式是将 WorkBuddy 直接设为默认模型提供商。将以下内容写入 `%USERPROFILE%\.codex\config.toml`：
-
+##### 2. 全局配置推荐（直接设为默认供应商）
+将以下内容写入 `%USERPROFILE%\.codex\config.toml`（需确保位于顶层或独立的 section）：
 ```toml
 # 直接设为全局默认模型与供应商（每次执行 codex 默认生效）
 model = "glm-5.2"

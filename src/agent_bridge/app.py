@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 from . import __version__
 from .auth import CredentialStore, pick_store
@@ -197,6 +197,14 @@ def create_app(settings: Settings, store: CredentialStore | None) -> FastAPI:
         if status_code != 200:
             return _upstream_error(status_code, result)
         return JSONResponse(result)
+
+    @app.head("/")
+    @app.head("/v1/responses")
+    @app.head("/responses")
+    @app.head("/v1/models")
+    @app.head("/models")
+    async def responses_head():
+        return Response(status_code=200)
 
     @app.post("/v1/responses")
     async def responses(request: Request):

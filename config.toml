@@ -68,11 +68,17 @@ desensitize = true
 "claude-minimax-m3"          = "minimax-m3"
 
 # 3. OpenAI / Codex 系列通用映射
-"gpt-5"       = "glm-5.2"
-"gpt-5-codex" = "glm-5.2"
-"gpt-4.1"     = "glm-5.2"
-"codex"       = "glm-5.2"
-"o3"          = "deepseek-v4-pro"
+"gpt-5.5"       = "glm-5.2"
+"gpt-5"         = "glm-5.2"
+"gpt-5-codex"   = "glm-5.2"
+"gpt-4.1"       = "glm-5.2"
+"gpt-4o"        = "glm-5.2"
+"gpt-5.6-terra" = "glm-5.3"
+"gpt-5.6-luna"  = "glm-5.3-flash"
+"gpt-6-luna"    = "glm-5.3"
+"gpt-reserve"   = "glm-5.2"
+"codex"         = "glm-5.2"
+"o3"            = "deepseek-v4-pro"
 
 # 4. DeepSeek 系列 (Deepseek-V4.1-Flash / Deepseek-V4-Pro)
 "Deepseek-V4.1-Flash" = "deepseek-v4.1-flash"
