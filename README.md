@@ -120,6 +120,10 @@ cd agent-bridge
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
+# Windows (Git Bash):
+python -m venv .venv
+source .venv/Scripts/activate
+
 # Linux / macOS:
 python3 -m venv .venv
 source .venv/bin/activate
@@ -131,10 +135,22 @@ pip install -e .
 python -m agent_bridge serve
 ```
 
+> 💡 **免激活直接运行技巧**：  
+> 若不想每次手动激活虚拟环境，可以直接使用虚拟环境中的 Python：  
+> - **Git Bash**：`./.venv/Scripts/python -m agent_bridge serve`  
+> - **PowerShell / CMD**：`.\.venv\Scripts\python.exe -m agent_bridge serve`
+
 > **注意**：如果本机没有安装桌面端，或者未登录，先运行以下命令在浏览器中扫码/授权登录：
 >
 > ```bash
+> # 已激活虚拟环境：
 > python -m agent_bridge login
+>
+> # 未激活虚拟环境时直接运行：
+> # Git Bash:
+> ./.venv/Scripts/python -m agent_bridge login
+> # PowerShell:
+> .\.venv\Scripts\python.exe -m agent_bridge login
 > ```
 >
 > 国际版 CodeBuddy 请加上 `--network global`：
@@ -173,11 +189,19 @@ curl http://127.0.0.1:8787/v1/messages `
   -H "anthropic-version: 2023-06-01" `
   -d '{"model":"claude-3-7-sonnet","messages":[{"role":"user","content":"你好"}],"max_tokens":100}'
 
-# 4. 查询当前账号积分余额
+# 4. 查询当前账号积分余额（已激活虚拟环境）
 python -m agent_bridge credits
+
+# 若新开终端未激活虚拟环境，可直接调用虚拟环境 Python（推荐）：
+# Git Bash:
+./.venv/Scripts/python -m agent_bridge credits
+# PowerShell:
+.\.venv\Scripts\python.exe -m agent_bridge credits
 
 # 5. 每日签到领取积分
 python -m agent_bridge checkin
+# 未激活虚拟环境同理：
+# ./.venv/Scripts/python -m agent_bridge checkin
 ```
 
 ---
@@ -612,6 +636,26 @@ desensitize = true
 
 - **原因**：腾讯云后端接口对模型 ID 区分大小写，且要求全部为小写（如 `glm-5.3`、`deepseek-v4-pro`），若上游收到首字母大写的 `GLM-5.3` 会报找不到服务。
 - **解决**：Agent Bridge 已在配置解析层与网关层内置大小写自动归一化处理。如果自行在 `config.toml` 中配置映射，请确保等号右侧的值为小写标准 ID。
+
+### Q9: 运行命令报错 `No module named agent_bridge` 或 `ModuleNotFoundError: No module named 'uvicorn'`？
+
+- **原因**：当前终端调用的是系统的**全局 Python**，未激活项目专属的虚拟环境（`.venv`）。
+  - 在根目录运行找不到 `agent_bridge` 包；
+  - 即使进入 `src/` 目录运行，全局 Python 也没有安装 `uvicorn`、`fastapi` 等项目依赖。
+- **解决**：
+  - **推荐方式（免激活，直接指定虚拟环境 Python）**：
+    - **Git Bash**：`./.venv/Scripts/python -m agent_bridge <子命令>`（如 `credits`、`login`）
+    - **PowerShell / CMD**：`.\.venv\Scripts\python.exe -m agent_bridge <子命令>`
+  - **或者先激活虚拟环境再运行**：
+    - **Git Bash**：`source .venv/Scripts/activate`
+    - **PowerShell**：`.\.venv\Scripts\Activate.ps1`
+
+### Q10: 在 Git Bash 中运行 `.\.venv\Scripts\...` 报错 `bash: ..venvScripts...: command not found`？
+
+- **原因**：Git Bash 是基于类 Unix 环境的终端，会将反斜杠 `\` 视为**转义符**（导致 `.\.venv` 被解析为 `..venv`），且无法执行 Windows 专用的 `.ps1` 脚本。
+- **解决**：在 Git Bash 下请使用**正斜杠 `/`**：
+  - 激活虚拟环境：`source .venv/Scripts/activate`
+  - 直接执行 Python：`./.venv/Scripts/python -m agent_bridge credits`
 
 ---
 
